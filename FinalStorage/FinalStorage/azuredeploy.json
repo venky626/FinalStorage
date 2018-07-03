@@ -44,6 +44,24 @@
       }
     },
 
+
+    "mydatabaseRequestedServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    },
+
     "mydatabaseRequestedServiceObjectiveName": {
       "type": "string",
       "defaultValue": "Basic",
