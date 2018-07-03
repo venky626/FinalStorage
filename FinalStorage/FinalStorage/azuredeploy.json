@@ -1,8 +1,154 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {},
-  "variables": {},
-  "resources": [],
+  "parameters": {
+    "myserverAdminLogin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "myserverAdminLoginPassword": {
+      "type": "securestring"
+    },
+    "mydatabaseName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mydatabaseCollation": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+    },
+    "mydatabaseEdition": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    },
+    "mydatabaseRequestedServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    },
+
+    "mydatabaseRequestedServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    },
+    "myimportStorageKeyType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "myimportStorageKey": {
+      "type": "securestring"
+    },
+    "myimportStorageUri": {
+      "type": "string",
+      "minLength": 1
+    },
+    "myimportAdministratorLogin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "myimportAdministratorLoginPassword": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "myserverName": "[concat('myserver', uniqueString(resourceGroup().id))]"},
+  "resources": [
+    {
+      "name": "[variables('myserverName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "myserver"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('myserverAdminLogin')]",
+        "administratorLoginPassword": "[parameters('myserverAdminLoginPassword')]"
+      },
+      "resources": [
+        {
+          "name": "AllowAllWindowsAzureIps",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('myserverName'))]"
+          ],
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[parameters('mydatabaseName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('myserverName'))]"
+          ],
+          "tags": {
+            "displayName": "mydatabase"
+          },
+          "properties": {
+            "collation": "[parameters('mydatabaseCollation')]",
+            "edition": "[parameters('mydatabaseEdition')]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[parameters('mydatabaseRequestedServiceObjectiveName')]"
+          },
+          "resources": [
+            {
+              "name": "myimport",
+              "type": "extensions",
+              "apiVersion": "2014-04-01-preview",
+              "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', split(concat(variables('myserverName'), '/', parameters('mydatabaseName')), '/')[0], split(concat(variables('myserverName'), '/', parameters('mydatabaseName')), '/')[1])]"
+              ],
+              "tags": {
+                "displayName": "myimport"
+              },
+              "properties": {
+                "storageKeyType": "[parameters('myimportStorageKeyType')]",
+                "storageKey": "[parameters('myimportStorageKey')]",
+                "storageUri": "[parameters('myimportStorageUri')]",
+                "administratorLogin": "[parameters('myimportAdministratorLogin')]",
+                "administratorLoginPassword": "[parameters('myimportAdministratorLoginPassword')]",
+                "operationMode": "Import"
+              }
+            }
+          ]
+        }
+      ]
+    }],
   "outputs": {}
 }
